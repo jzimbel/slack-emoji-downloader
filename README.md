@@ -9,11 +9,10 @@ Usage:
 ```sh
 cd path/to/slack-emoji-downloader
 pipenv install
-pipenv shell
-python download.py emoji.json
+pipenv run python download.py emoji.json
 # wait a potentially very long time
 # ...
-exit   # exit the Pipenv virtual environment when you're done
+ls output  # results are saved to the output/ directory
 ```
 
 **Please note**: I take no responsibility for copyright / intellectual property / trade secrets issues you might get into trouble for by using this script.
