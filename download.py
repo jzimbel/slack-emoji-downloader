@@ -30,9 +30,8 @@ def main():
     except:
       failures[name] = url
     counter += 1
-  print('\n')
 
-  print('Creating symlinks for aliases')
+  print('\n\nCreating symlinks for aliases')
   print('Some of these may fail if they refer to one of Slack\'s default emoji\n')
   for name, alias in aliases.items():
     resolvedAlias = resolveAlias(alias, originals, aliases)
@@ -40,15 +39,13 @@ def main():
       extension = getExtension(originals[resolvedAlias])
       symlink(f'{name}.{extension}', f'{resolvedAlias}.{extension}')
 
-  print()
-  print(f'Done. Images and aliases saved to {OUTPUT_PATH}.')
+  print(f'\nDone. Images and aliases saved to {OUTPUT_PATH}.')
 
   if len(failures) > 0:
-    print()
     failuresPath = f'{os.getcwd()}/failures.json'
     with open(failuresPath, 'w') as f:
       json.dump({'emoji': failures}, f, indent=4)
-    print(f'{len(failures)} images failed to download. These have been recorded in {failuresPath}.')
+    print(f'\n{len(failures)} images failed to download. These have been recorded in {failuresPath}.')
     print('To retry these, rename the output directory to something else and then run:')
     print(f'python {argv[0]} {failuresPath}')
 
@@ -90,7 +87,6 @@ def download(name, url):
     with open(path, 'wb') as f:
       f.write(r.content)
   else:
-    print(f'Download failed: :{name}: @ {url}')
     raise Exception('Download failed')
 
 def getExtension(url):
