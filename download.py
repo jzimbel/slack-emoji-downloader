@@ -21,12 +21,14 @@ def main():
 
   print('Downloading images')
   counter = 0
+  failures = {}
   for name, url in originals.items():
-    print(f'{counter+1:>6,} / {downloadCount:,}', end='\r')
-    download(name, url)
-
-    if counter % 100 == 99:
-      time.sleep(1)
+    # Prints a download progress message that updates in place
+    print(f'\r{counter+1:>6,} / {downloadCount:,}\t{to30Chars(name)}', end='')
+    try:
+      download(name, url)
+    except:
+      failures[name] = url
     counter += 1
   print('\n')
 
@@ -39,7 +41,16 @@ def main():
       symlink(f'{name}.{extension}', f'{resolvedAlias}.{extension}')
 
   print()
-  print('Done.')
+  print(f'Done. Images and aliases saved to {OUTPUT_PATH}.')
+
+  if len(failures) > 0:
+    print()
+    failuresPath = f'{os.getcwd()}/failures.json'
+    with open(failuresPath, 'w') as f:
+      json.dump({'emoji': failures}, f, indent=4)
+    print(f'{len(failures)} images failed to download. These have been recorded in {failuresPath}.')
+    print('To retry these, rename the output directory to something else and then run:')
+    print(f'python {argv[0]} {failuresPath}')
 
 def prepareOutput():
   shutil.rmtree(OUTPUT_PATH, ignore_errors=True)
@@ -54,7 +65,7 @@ def getEmojiDict(path):
 
 def separate(emojiDict):
   '''
-  Separates the original emoji dict into new dictionaries containing originals and aliases, and returns both.
+  Separates the emoji dict into new dictionaries containing originals and aliases, and returns both.
   '''
   originals = {}
   aliases = {}
@@ -80,13 +91,16 @@ def download(name, url):
       f.write(r.content)
   else:
     print(f'Download failed: :{name}: @ {url}')
+    raise Exception('Download failed')
 
 def getExtension(url):
   return url.split('.')[-1]
 
 def resolveAlias(alias, originals, aliases):
   '''
-  Resolves an alias to the original that it refers to. Aliases can refer to other aliases, so this needs to be recursive.
+  Resolves an alias to the original that it refers to.
+  Aliases can refer to other aliases, so this keeps going down the reference
+  chain until it finds an original.
   '''
   if alias in originals:
     return alias
@@ -99,9 +113,21 @@ def symlink(linkName, targetName):
   '''
   Creates a symlink from an alias to the original image it refers to.
   '''
-  # os.symlink's arguments are confusingly "backward":
-  # first arg is the file we're linking TO, second arg is the name of the link.
-  os.symlink(f'{OUTPUT_PATH}/{targetName}', f'{OUTPUT_PATH}/{linkName}')
+  targetPath = f'{OUTPUT_PATH}/{targetName}'
+  linkPath = f'{OUTPUT_PATH}/{linkName}'
+  if os.path.isfile(targetPath):
+    os.symlink(targetPath, linkPath)
+  else:
+    print(f'Tried to create an alias symlink to {targetPath}, but it doesn\'t exist')
+
+def to30Chars(s):
+  '''
+  Forces a string to 30 characters, padding with spaces or truncating as needed.
+  '''
+  if len(s) > 30:
+    return s[:27] + '...'
+  else:
+    return s.ljust(30, ' ')
 
 if __name__ == '__main__':
   main()
