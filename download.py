@@ -2,7 +2,6 @@ from sys import argv
 import os
 import json
 import requests
-import time
 import shutil
 
 OUTPUT_PATH = f'{os.getcwd()}/output'
