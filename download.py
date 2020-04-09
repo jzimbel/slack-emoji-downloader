@@ -108,11 +108,12 @@ def resolveAlias(alias, originals, aliases):
 def symlink(linkName, targetName):
   '''
   Creates a symlink from an alias to the original image it refers to.
+  Link target is relative so that moving/renaming the parent directory does not break the link.
   '''
   targetPath = f'{OUTPUT_PATH}/{targetName}'
   linkPath = f'{OUTPUT_PATH}/{linkName}'
   if os.path.isfile(targetPath):
-    os.symlink(targetPath, linkPath)
+    os.symlink(targetName, linkPath)
   else:
     print(f'Tried to create an alias symlink to {targetPath}, but it doesn\'t exist')
 
